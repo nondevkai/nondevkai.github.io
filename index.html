@@ -44,6 +44,9 @@ button{font:inherit}
 .crest .nm small{display:block;font:500 10px/1.4 var(--sans);letter-spacing:.24em;color:var(--faint);text-transform:uppercase}
 .mast nav a{font-size:14px;color:var(--sub);padding:6px 2px;border-bottom:1px solid transparent}
 .mast nav a:hover{color:var(--ink);border-color:var(--gold)}
+.mast .right{display:flex;align-items:center;gap:16px;flex:none}
+.lang{border:1px solid var(--gold);background:transparent;color:var(--gold);border-radius:99px;padding:5px 13px;font:600 12.5px var(--sans);letter-spacing:.06em;cursor:pointer}
+.lang:hover{background:var(--gold);color:var(--paper)}
 
 /* 첫 화면 */
 .hero{position:relative;text-align:center;padding:64px 0 40px;overflow:hidden}
@@ -235,16 +238,54 @@ footer .ft{font-size:12.5px;opacity:.7;text-align:right}
     <svg width="34" height="38" viewBox="0 0 34 38" aria-hidden="true"><path d="M2 37V15a15 15 0 0 1 30 0v22" fill="none" stroke="var(--gold)" stroke-width="1.6"/><path d="M7 37V16a10 10 0 0 1 20 0v21" fill="none" stroke="var(--gold)" stroke-width="1" opacity=".55"/><text x="17" y="30" text-anchor="middle" style="font:900 11px var(--serif);fill:var(--green)">AI</text></svg>
     <span class="nm" id="nm"></span>
   </a>
-  <nav><a href="#">서가</a> &nbsp;·&nbsp; <a href="#guide">열람 안내</a></nav>
+  <div class="right"><nav><a href="#" id="nv1"></a> &nbsp;·&nbsp; <a href="#guide" id="nv2"></a></nav>
+    <button class="lang" id="lang" type="button"></button></div>
 </div></header>
 <main id="app"></main>
 <footer><div class="wrap">
-  <div><div class="fn" id="fn"></div><p>영상에서 「#번호」를 봤다면 검색 칸에 번호를 넣으세요.</p></div>
+  <div><div class="fn" id="fn"></div><p id="fp"></p></div>
   <div class="ft" id="ft"></div>
 </div></footer>
 <script>
-const DATA = {"built": "2026-11-04", "hubs": [], "prompts": []};
-const LIB = "비개발자 KAI의 AI일지 도서관";
+const DATA = {"built": "2026-11-05", "hubs": [], "prompts": []};
+// 11-05 카이 「도서관도 글로벌 · 프롬프트는 한국용·글로벌용 같이」 — 화면 글은 T 한 곳 · 책 글은 노트의 「## English」 칸(도서관.py 가 en 으로 넣음)
+// 언어 고르기 = 주소 ?lang=en|ko → 지난번 고른 것 → 브라우저 언어(한국어면 ko · 아니면 en)
+const T = {
+  ko: {lib: "비개발자 KAI의 AI일지 도서관", h1: "비개발자 KAI의<br><em>AI일지 도서관</em>", sw: "English", nv1: "서가", nv2: "열람 안내",
+    fp: "영상에서 「#번호」를 봤다면 검색 칸에 번호를 넣으세요.", ft: (n, s, d) => `소장 프롬프트 ${n} · 서가 ${s}<br>마지막 정리 ${d}`,
+    shelf: "서가", books: n => `${n}권`, soon: "곧 들어올 책", root: ["프롬프트", "도서관"], mapLabel: "서가 안내도",
+    gH: "열람 안내", gP: "영상 끝에 나온 번호만 기억하면 됩니다.",
+    g: [["번호로 찾기", "영상에서 본 「#번호」를 검색 칸에 넣거나, 서가에서 책을 고르세요."], ["그대로 복사", "책을 열고 「복사하기」를 누르면 프롬프트 전체가 복사됩니다."], ["붙여 넣기", "클로드 코드에 붙여 넣으면 됩니다. 프롬프트 위에 어디에 붙여 넣는지 적혀 있습니다."]],
+    oLead: "영상에서 본 프롬프트를 번호로 찾아, 그대로 복사해 쓰는 도서관입니다.", oH: "개관 준비 중", oP: "첫 책은 첫 영상이 올라가는 날 함께 서가에 꽂힙니다.<br>영상 끝에 나온 「#번호」를 기억해 두세요.",
+    lead: "영상에서 본 프롬프트를 번호로 찾아, 그대로 복사해 쓰세요.<br>비개발자가 AI와 실제로 일하며 쓰는 프롬프트만 모았습니다.",
+    ph: "영상 속 번호(예: 3)나 낱말로 찾기", search: "프롬프트 찾기", st: ["소장 프롬프트", "서가", "무료", "열람·복사"],
+    none: "그 번호의 프롬프트는 아직 서가에 없습니다.", found: (q, n) => `「${q}」 찾은 결과 ${n}권`, all: "← 서가 전체 보기",
+    planP: "가운데에서 갈래별 서가로, 서가에서 각 프롬프트로 이어집니다. 점선은 다른 서가에도 걸친 책입니다.", planH: "서가 안내도",
+    stH: "서가", stP: "책등을 누르면 프롬프트가 열립니다.", catH: "번호순 목록", catP: "영상 번호와 같습니다.",
+    callNo: "청구기호", lib2: "도서관", librarian: "사서의 말", copy: "복사하기", copied: "복사됐어요", prev: "← 앞 번호", next: "다음 번호 →",
+    info: "도서 정보", num: "번호", watch: "▶ 영상으로 보기", noVid: "영상 준비 중", before: "먼저 읽으면 좋은 책", after: "이어서 읽을 책"},
+  en: {lib: "Non-dev KAI's AI Diary Library", h1: "Non-dev KAI's<br><em>AI Diary Library</em>", sw: "한국어", nv1: "Stacks", nv2: "How to use",
+    fp: "Saw a #number in a video? Type it into the search box.", ft: (n, s, d) => `${n} prompts · ${s} shelves<br>Last updated ${d}`,
+    shelf: "Shelf", books: n => `${n} ${n === 1 ? "book" : "books"}`, soon: "Coming soon", root: ["Prompt", "Library"], mapLabel: "Floor plan",
+    gH: "How to use", gP: "All you need is the number from the end of the video.",
+    g: [["Find by number", "Type the #number from the video into the search box, or pick a book from the shelves."], ["Copy it", "Open the book and press Copy. The whole prompt is copied."], ["Paste it", "Paste it into Claude Code. Where to paste is written right above the prompt."]],
+    oLead: "Find the prompt you saw in a video by its number, then copy and use it as is.", oH: "The doors open soon", oP: "The first book goes on the shelf the day the first video goes live.<br>Remember the #number at the end of the video.",
+    lead: "Find the prompt you saw in a video by its number, then copy it as is.<br>Only prompts a non-developer actually uses to work with AI.",
+    ph: "Search by number (e.g. 3) or word", search: "Search prompts", st: ["Prompts", "Shelves", "Free", "Read & copy"],
+    none: "That number isn't on the shelves yet.", found: (q, n) => `${n} result${n === 1 ? "" : "s"} for "${q}"`, all: "← Back to all shelves",
+    planP: "From the center to each shelf, and from each shelf to its prompts. Dotted lines mean a book sits on more than one shelf.", planH: "Floor plan",
+    stH: "The stacks", stP: "Click a spine to open the prompt.", catH: "By number", catP: "Same numbers as the videos.",
+    callNo: "Call no.", lib2: "Library", librarian: "Librarian's note", copy: "Copy", copied: "Copied", prev: "← Previous", next: "Next →",
+    info: "About this book", num: "Number", watch: "▶ Watch the video", noVid: "Video coming soon", before: "Read this first", after: "Read next"},
+};
+const qlang = new URLSearchParams(location.search).get("lang");
+// 저장 공간이 막힌 브라우저(사생활 모드 등)에서 통째로 멈추지 않게 — 못 쓰면 그냥 기억 안 함
+const store = {get: k => { try { return localStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch {} }};
+let LANG = ["ko", "en"].includes(qlang) ? qlang : (store.get("lang") || ((navigator.language || "").toLowerCase().startsWith("ko") ? "ko" : "en"));
+if (!T[LANG]) LANG = "ko";
+let t = T[LANG], LIB = t.lib;
+// 책·서가 글 = 고른 언어 · 영어가 비면 한국어(공개 책은 도서관.py 검사가 영어를 강제하므로 평소엔 안 생김)
+const L = (o, k) => (LANG === "en" && o.en && o.en[k]) ? o.en[k] : o[k];
 const app = document.getElementById("app");
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const bold = s => esc(s).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
@@ -256,13 +297,21 @@ const byNum = Object.fromEntries(DATA.prompts.map(p => [p.num, p]));
 const first = h => Math.min(9e9, ...DATA.prompts.filter(p => p.hubs[0] === h.id).map(p => p.num));
 const HUBS = [...DATA.hubs].sort((a, b) => first(a) - first(b)).map((h, i) => ({...h, rn: ROMAN[i] || String(i + 1), color: SPINE[i % SPINE.length]}));
 const hubOf = Object.fromEntries(HUBS.map(h => [h.id, h]));
-const shelfLink = h => `#/서가/${encodeURIComponent(h.name)}`;
-document.getElementById("nm").innerHTML = `${esc(LIB)}<small>The Prompt Library</small>`;
-document.getElementById("fn").textContent = LIB;
-document.getElementById("ft").innerHTML = `소장 프롬프트 ${DATA.prompts.length} · 서가 ${HUBS.length}<br>마지막 정리 ${esc(DATA.built)}`;
+const shelfLink = h => `#/shelf/${encodeURIComponent(h.id)}`;   // 서가 주소는 언어와 상관없는 id
+function chrome(){
+  document.documentElement.lang = LANG;
+  document.getElementById("nm").innerHTML = `${esc(LIB)}<small>The Prompt Library</small>`;
+  document.getElementById("fn").textContent = LIB;
+  document.getElementById("fp").textContent = t.fp;
+  document.getElementById("nv1").textContent = t.nv1;
+  document.getElementById("nv2").textContent = t.nv2;
+  document.getElementById("lang").textContent = t.sw;
+  document.getElementById("ft").innerHTML = t.ft(DATA.prompts.length, HUBS.length, esc(DATA.built));
+}
+document.getElementById("lang").onclick = () => { LANG = LANG === "ko" ? "en" : "ko"; t = T[LANG]; LIB = t.lib; store.set("lang", LANG); chrome(); route(); };
 
-const icard = p => `<a class="icard" href="#${p.num}"><div class="top"><span class="call">#${p.num} · ${call(p.num)}</span><span class="sh">서가 ${hubOf[p.hubs[0]].rn} ${esc(hubOf[p.hubs[0]].name)}</span></div>
-  <div class="t">${esc(p.name)}</div><div class="d">${bold(p.one)}</div></a>`;
+const icard = p => `<a class="icard" href="#${p.num}"><div class="top"><span class="call">#${p.num} · ${call(p.num)}</span><span class="sh">${t.shelf} ${hubOf[p.hubs[0]].rn} ${esc(L(hubOf[p.hubs[0]], "name"))}</span></div>
+  <div class="t">${esc(L(p, "name"))}</div><div class="d">${bold(L(p, "one"))}</div></a>`;
 
 function map(){
   const W = 440, H = 440, cx = W/2, cy = H/2, R = 118, r2 = 66, n = HUBS.length, pos = {};
@@ -276,60 +325,60 @@ function map(){
       s += `<line class="e" x1="${x}" y1="${y}" x2="${pos["p" + p.num][0]}" y2="${pos["p" + p.num][1]}"/>`; });
   });
   DATA.prompts.forEach(p => p.hubs.slice(1).forEach(id => { const [px, py] = pos["p" + p.num], [x, y] = pos[id]; s += `<line class="e2" x1="${x}" y1="${y}" x2="${px}" y2="${py}"/>`; }));
-  HUBS.forEach(h => { const [x, y] = pos[h.id]; nodes += `<a href="${shelfLink(h)}"><title>서가 ${h.rn} ${esc(h.name)}</title><circle class="hub2" cx="${x}" cy="${y}" r="38"/><circle class="hub" cx="${x}" cy="${y}" r="33"/><text class="hubn" x="${x}" y="${y - 7}">${h.rn}</text><text class="hubt" x="${x}" y="${y + 12}">${esc(h.name)}</text></a>`; });
-  DATA.prompts.forEach(p => { const [px, py] = pos["p" + p.num]; nodes += `<a href="#${p.num}"><title>#${p.num} ${esc(p.name)}</title><circle class="p" cx="${px}" cy="${py}" r="15"/><text class="pt" x="${px}" y="${py + 4.5}">${p.num}</text></a>`; });
-  nodes += `<circle class="root" cx="${cx}" cy="${cy}" r="40"/><circle cx="${cx}" cy="${cy}" r="35" fill="none" stroke="#c9a35a" stroke-width=".8"/><text class="roott" x="${cx}" y="${cy - 2}">프롬프트</text><text class="roott" x="${cx}" y="${cy + 15}">도서관</text>`;
-  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="서가 안내도">${s}${nodes}</svg>`;
+  HUBS.forEach(h => { const [x, y] = pos[h.id]; nodes += `<a href="${shelfLink(h)}"><title>${t.shelf} ${h.rn} ${esc(L(h, "name"))}</title><circle class="hub2" cx="${x}" cy="${y}" r="38"/><circle class="hub" cx="${x}" cy="${y}" r="33"/><text class="hubn" x="${x}" y="${y - 7}">${h.rn}</text><text class="hubt" x="${x}" y="${y + 12}" style="${LANG === "en" ? "font-size:12px" : ""}">${esc(L(h, "name"))}</text></a>`; });
+  DATA.prompts.forEach(p => { const [px, py] = pos["p" + p.num]; nodes += `<a href="#${p.num}"><title>#${p.num} ${esc(L(p, "name"))}</title><circle class="p" cx="${px}" cy="${py}" r="15"/><text class="pt" x="${px}" y="${py + 4.5}">${p.num}</text></a>`; });
+  nodes += `<circle class="root" cx="${cx}" cy="${cy}" r="40"/><circle cx="${cx}" cy="${cy}" r="35" fill="none" stroke="#c9a35a" stroke-width=".8"/><text class="roott" x="${cx}" y="${cy - 2}">${t.root[0]}</text><text class="roott" x="${cx}" y="${cy + 15}">${t.root[1]}</text>`;
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${t.mapLabel}">${s}${nodes}</svg>`;
 }
 
 function shelf(h){
   const mine = DATA.prompts.filter(p => p.hubs[0] === h.id);
   if (!mine.length) return "";
-  const books = mine.map(p => { const w = 50 + (p.name.length % 4) * 5, ht = 186 + ((p.num * 37) % 30);
-    return `<a class="spine" href="#${p.num}" style="width:${w}px;height:${ht}px;background:${h.color}" title="#${p.num} ${esc(p.name)}"><span class="ti">${esc(p.name)}</span><span class="no">#${p.num}</span></a>`; }).join("");
-  return `<div class="shelf"><div class="shelfh"><span class="rn">${h.rn}</span><h3>${esc(h.name)}</h3><p>${esc(h.intro)}</p></div><div class="books">${books}<span class="ghost" style="height:170px" aria-hidden="true"><span>곧 들어올 책</span></span><span class="ghost" style="height:150px;opacity:.6" aria-hidden="true"></span></div><div class="board"></div></div>`;
+  const books = mine.map(p => { const nm = L(p, "name"), w = 50 + (nm.length % 4) * 5, ht = 186 + ((p.num * 37) % 30);
+    return `<a class="spine" href="#${p.num}" style="width:${w}px;height:${ht}px;background:${h.color}" title="#${p.num} ${esc(nm)}"><span class="ti">${esc(nm)}</span><span class="no">#${p.num}</span></a>`; }).join("");
+  return `<div class="shelf"><div class="shelfh"><span class="rn">${h.rn}</span><h3>${esc(L(h, "name"))}</h3><p>${esc(L(h, "intro"))}</p></div><div class="books">${books}<span class="ghost" style="height:170px" aria-hidden="true"><span>${t.soon}</span></span><span class="ghost" style="height:150px;opacity:.6" aria-hidden="true"></span></div><div class="board"></div></div>`;
 }
 
-const guide = `<section class="sec" id="guide"><div class="sech"><div><div class="eyebrow">How to use</div><h2>열람 안내</h2></div><p>영상 끝에 나온 번호만 기억하면 됩니다.</p></div>
-  <div class="guide"><div><b>1</b><h4>번호로 찾기</h4><p>영상에서 본 「#번호」를 검색 칸에 넣거나, 서가에서 책을 고르세요.</p></div>
-  <div><b>2</b><h4>그대로 복사</h4><p>책을 열고 「복사하기」를 누르면 프롬프트 전체가 복사됩니다.</p></div>
-  <div><b>3</b><h4>붙여 넣기</h4><p>클로드 코드에 붙여 넣으면 됩니다. 프롬프트 위에 어디에 붙여 넣는지 적혀 있습니다.</p></div></div></section>`;
+const guide = () => `<section class="sec" id="guide"><div class="sech"><div><div class="eyebrow">How to use</div><h2>${t.gH}</h2></div><p>${t.gP}</p></div>
+  <div class="guide">${t.g.map(([h, p], i) => `<div><b>${i + 1}</b><h4>${h}</h4><p>${p}</p></div>`).join("")}</div></section>`;
 
 function opening(){
   // 연 책이 아직 0권 — 영상이 열리는 날 첫 책이 꽂힌다(스포 막기)
   app.innerHTML = `<section class="hero"><div class="wrap"><div class="arch"></div>
     <div class="eyebrow" style="position:relative">The Prompt Library</div>
-    <h1>비개발자 KAI의<br><em>AI일지 도서관</em></h1>
-    <p class="lead">영상에서 본 프롬프트를 번호로 찾아, 그대로 복사해 쓰는 도서관입니다.</p>
+    <h1>${t.h1}</h1>
+    <p class="lead">${t.oLead}</p>
     <div class="orn">✦</div>
-    <div class="opening"><div class="eyebrow">Opening soon</div><h2>개관 준비 중</h2>
-      <p>첫 책은 첫 영상이 올라가는 날 함께 서가에 꽂힙니다.<br>영상 끝에 나온 「#번호」를 기억해 두세요.</p>
+    <div class="opening"><div class="eyebrow">Opening soon</div><h2>${t.oH}</h2>
+      <p>${t.oP}</p>
       <div class="ghostrow" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div></div>
-  </div></section><div class="wrap">${guide}</div>`;
+  </div></section><div class="wrap">${guide()}</div>`;
 }
 
 function home(q = "", hub = ""){
   if (!DATA.prompts.length) return opening();
   const ql = q.trim().replace(/^#/, "").toLowerCase();
   const h = hub && hubOf[hub];
-  const list = DATA.prompts.filter(p => (!h || p.hubs.includes(hub)) && (!ql || String(p.num) === ql || (p.name + p.one).toLowerCase().includes(ql)));
-  const results = `<div class="cat">${list.map(icard).join("") || `<div class="empty">그 번호의 프롬프트는 아직 서가에 없습니다.</div>`}</div>`;
+  // 찾기는 두 언어 글을 다 본다(영어 화면에서 한국어 낱말로 찾아도 나오게)
+  const hay = p => (p.name + p.one + (p.en ? p.en.name + p.en.one : "")).toLowerCase();
+  const list = DATA.prompts.filter(p => (!h || p.hubs.includes(hub)) && (!ql || String(p.num) === ql || hay(p).includes(ql)));
+  const results = `<div class="cat">${list.map(icard).join("") || `<div class="empty">${t.none}</div>`}</div>`;
   app.innerHTML = `<section class="hero"><div class="wrap"><div class="arch"></div>
     <div class="eyebrow" style="position:relative">The Prompt Library</div>
-    <h1>비개발자 KAI의<br><em>AI일지 도서관</em></h1>
-    <p class="lead">영상에서 본 프롬프트를 번호로 찾아, 그대로 복사해 쓰세요.<br>비개발자가 AI와 실제로 일하며 쓰는 프롬프트만 모았습니다.</p>
+    <h1>${t.h1}</h1>
+    <p class="lead">${t.lead}</p>
     <div class="orn">✦</div>
     <div class="seek"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-      <input id="q" inputmode="search" autocomplete="off" placeholder="영상 속 번호(예: 3)나 낱말로 찾기" value="${esc(q)}" aria-label="프롬프트 찾기"></div>
-    <div class="stats"><div><b>${DATA.prompts.length}</b><span>소장 프롬프트</span></div><div><b>${HUBS.length}</b><span>서가</span></div><div><b>무료</b><span>열람·복사</span></div></div>
+      <input id="q" inputmode="search" autocomplete="off" placeholder="${t.ph}" value="${esc(q)}" aria-label="${t.search}"></div>
+    <div class="stats"><div><b>${DATA.prompts.length}</b><span>${t.st[0]}</span></div><div><b>${HUBS.length}</b><span>${t.st[1]}</span></div><div><b>${t.st[2]}</b><span>${t.st[3]}</span></div></div>
   </div></section>
   <div class="wrap">
-  ${ql || h ? `<section class="sec" style="padding-top:20px"><div class="sech"><div><div class="eyebrow">${h ? "Shelf " + h.rn : "Search"}</div><h2>${h ? "서가 " + h.rn + " · " + esc(h.name) : "「" + esc(q.trim()) + "」 찾은 결과 " + list.length + "권"}</h2></div><p>${h ? esc(h.intro) : `<a href="#" style="color:var(--gold)">← 서가 전체 보기</a>`}</p></div>${results}</section>`
-  : `<section class="sec"><div class="sech"><div><div class="eyebrow">Floor plan</div><h2>서가 안내도</h2></div><p>가운데에서 갈래별 서가로, 서가에서 각 프롬프트로 이어집니다. 점선은 다른 서가에도 걸친 책입니다.</p></div>
-      <div class="plan"><div class="map">${map()}</div><ol class="legend">${HUBS.map(x => `<li><a href="${shelfLink(x)}"><span class="rn">${x.rn}</span><span class="t">${esc(x.name)}</span><span class="c">${DATA.prompts.filter(p => p.hubs.includes(x.id)).length}권</span><span class="i">${esc(x.intro)}</span></a></li>`).join("")}</ol></div></section>
-    <section class="sec"><div class="sech"><div><div class="eyebrow">The stacks</div><h2>서가</h2></div><p>책등을 누르면 프롬프트가 열립니다.</p></div>${HUBS.map(shelf).join("")}</section>
-    <section class="sec"><div class="sech"><div><div class="eyebrow">Catalogue</div><h2>번호순 목록</h2></div><p>영상 번호와 같습니다.</p></div>${results}</section>
-    ${guide}`}
+  ${ql || h ? `<section class="sec" style="padding-top:20px"><div class="sech"><div><div class="eyebrow">${h ? "Shelf " + h.rn : "Search"}</div><h2>${h ? t.shelf + " " + h.rn + " · " + esc(L(h, "name")) : t.found(esc(q.trim()), list.length)}</h2></div><p>${h ? esc(L(h, "intro")) : `<a href="#" style="color:var(--gold)">${t.all}</a>`}</p></div>${results}</section>`
+  : `<section class="sec"><div class="sech"><div><div class="eyebrow">Floor plan</div><h2>${t.planH}</h2></div><p>${t.planP}</p></div>
+      <div class="plan"><div class="map">${map()}</div><ol class="legend">${HUBS.map(x => `<li><a href="${shelfLink(x)}"><span class="rn">${x.rn}</span><span class="t">${esc(L(x, "name"))}</span><span class="c">${t.books(DATA.prompts.filter(p => p.hubs.includes(x.id)).length)}</span><span class="i">${esc(L(x, "intro"))}</span></a></li>`).join("")}</ol></div></section>
+    <section class="sec"><div class="sech"><div><div class="eyebrow">The stacks</div><h2>${t.stH}</h2></div><p>${t.stP}</p></div>${HUBS.map(shelf).join("")}</section>
+    <section class="sec"><div class="sech"><div><div class="eyebrow">Catalogue</div><h2>${t.catH}</h2></div><p>${t.catP}</p></div>${results}</section>
+    ${guide()}`}
   </div>`;
   const qi = document.getElementById("q");
   qi.addEventListener("input", () => { const v = qi.value; home(v, hub); const n = document.getElementById("q"); n.focus(); n.setSelectionRange(v.length, v.length); });
@@ -339,30 +388,31 @@ function home(q = "", hub = ""){
 function page(p){
   const h = hubOf[p.hubs[0]], nums = DATA.prompts.map(x => x.num).sort((a, b) => a - b), i = nums.indexOf(p.num);
   const prev = byNum[nums[i - 1]], next = byNum[nums[i + 1]];
-  const rel = (title, list) => list.length ? `<div class="slip"><h4>${title}</h4>${list.map(n => `<a class="rel" href="#${n}"><span class="call">#${n} · ${call(n)}</span><span class="t">${esc(byNum[n].name)}</span></a>`).join("")}</div>` : "";
-  app.innerHTML = `<div class="wrap"><div class="crumb"><a href="#">도서관</a> › <a href="${shelfLink(h)}">서가 ${h.rn} ${esc(h.name)}</a> › #${p.num}</div>
+  const rel = (title, list) => list.length ? `<div class="slip"><h4>${title}</h4>${list.map(n => `<a class="rel" href="#${n}"><span class="call">#${n} · ${call(n)}</span><span class="t">${esc(L(byNum[n], "name"))}</span></a>`).join("")}</div>` : "";
+  const hn = id => esc(L(hubOf[id], "name")), text = L(p, "prompt");
+  app.innerHTML = `<div class="wrap"><div class="crumb"><a href="#">${t.lib2}</a> › <a href="${shelfLink(h)}">${t.shelf} ${h.rn} ${hn(h.id)}</a> › #${p.num}</div>
   <article class="book"><div>
-    <div class="titlepage"><div class="call2">청구기호 ${call(p.num)}</div><div class="bnum">#${p.num}</div><h1>${esc(p.name)}</h1>
-      <p class="epi">${bold(p.one)}</p>
-      <div class="tags">${p.hubs.map(id => `<a class="tag" href="${shelfLink(hubOf[id])}">서가 ${hubOf[id].rn} · ${esc(hubOf[id].name)}</a>`).join("")}</div></div>
-    ${p.why ? `<div class="note"><span class="lb">사서의 말</span><p>${esc(p.why)}</p></div>` : ""}
-    <p class="how">${esc(p.where)}</p>
-    <div class="ms"><div class="msbar"><span>PROMPT · ${call(p.num)}</span><button class="copy" id="cp"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><span>복사하기</span></button></div><pre>${esc(p.prompt)}</pre></div>
-    <nav class="nextprev">${prev ? `<a href="#${prev.num}">← 앞 번호<b>#${prev.num} ${esc(prev.name)}</b></a>` : "<span></span>"}${next ? `<a href="#${next.num}" style="text-align:right">다음 번호 →<b>#${next.num} ${esc(next.name)}</b></a>` : ""}</nav>
+    <div class="titlepage"><div class="call2">${t.callNo} ${call(p.num)}</div><div class="bnum">#${p.num}</div><h1>${esc(L(p, "name"))}</h1>
+      <p class="epi">${bold(L(p, "one"))}</p>
+      <div class="tags">${p.hubs.map(id => `<a class="tag" href="${shelfLink(hubOf[id])}">${t.shelf} ${hubOf[id].rn} · ${hn(id)}</a>`).join("")}</div></div>
+    ${L(p, "why") ? `<div class="note"><span class="lb">${t.librarian}</span><p>${esc(L(p, "why"))}</p></div>` : ""}
+    <p class="how">${esc(L(p, "where"))}</p>
+    <div class="ms"><div class="msbar"><span>PROMPT · ${call(p.num)}</span><button class="copy" id="cp"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><span>${t.copy}</span></button></div><pre>${esc(text)}</pre></div>
+    <nav class="nextprev">${prev ? `<a href="#${prev.num}">${t.prev}<b>#${prev.num} ${esc(L(prev, "name"))}</b></a>` : "<span></span>"}${next ? `<a href="#${next.num}" style="text-align:right">${t.next}<b>#${next.num} ${esc(L(next, "name"))}</b></a>` : ""}</nav>
   </div>
   <aside class="side">
-    <div class="slip"><h4>도서 정보</h4><dl><dt>번호</dt><dd>#${p.num}</dd><dt>청구기호</dt><dd>${call(p.num)}</dd><dt>서가</dt><dd>${p.hubs.map(id => hubOf[id].rn + " " + esc(hubOf[id].name)).join(" · ")}</dd></dl>
-      ${p.video ? `<a class="watch" href="${esc(p.video)}" target="_blank" rel="noopener">▶ 영상으로 보기</a>` : `<span class="watch off">영상 준비 중</span>`}</div>
-    ${rel("먼저 읽으면 좋은 책", p.before)}${rel("이어서 읽을 책", p.after)}
+    <div class="slip"><h4>${t.info}</h4><dl><dt>${t.num}</dt><dd>#${p.num}</dd><dt>${t.callNo}</dt><dd>${call(p.num)}</dd><dt>${t.shelf}</dt><dd>${p.hubs.map(id => hubOf[id].rn + " " + hn(id)).join(" · ")}</dd></dl>
+      ${p.video ? `<a class="watch" href="${esc(p.video)}" target="_blank" rel="noopener">${t.watch}</a>` : `<span class="watch off">${t.noVid}</span>`}</div>
+    ${rel(t.before, p.before)}${rel(t.after, p.after)}
   </aside></article></div>`;
   const b = document.getElementById("cp"), label = b.querySelector("span");
   b.onclick = async () => {
-    try { await navigator.clipboard.writeText(p.prompt); }
-    catch { const t = document.createElement("textarea"); t.value = p.prompt; document.body.appendChild(t); t.select(); document.execCommand("copy"); t.remove(); }
-    label.textContent = "복사됐어요"; b.classList.add("done");
-    setTimeout(() => { label.textContent = "복사하기"; b.classList.remove("done"); }, 1800);
+    try { await navigator.clipboard.writeText(text); }
+    catch { const ta = document.createElement("textarea"); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove(); }
+    label.textContent = t.copied; b.classList.add("done");
+    setTimeout(() => { label.textContent = t.copy; b.classList.remove("done"); }, 1800);
   };
-  document.title = `#${p.num} ${p.name} · ${LIB}`;
+  document.title = `#${p.num} ${L(p, "name")} · ${LIB}`;
 }
 
 function route(){
@@ -371,11 +421,11 @@ function route(){
   if (h === "guide") { if (!document.getElementById("guide")) home(); document.getElementById("guide").scrollIntoView(); return; }
   window.scrollTo(0, 0);
   if (byNum[h]) return page(byNum[h]);
-  const m = h.match(/^\/서가\/(.+)$/);
-  if (m) { const hub = HUBS.find(x => x.name === m[1]); if (hub) return home("", hub.id); }
+  const m = h.match(/^\/shelf\/(.+)$/);
+  if (m && hubOf[m[1]]) return home("", m[1]);
   home();
 }
-addEventListener("hashchange", route); route();
+chrome(); addEventListener("hashchange", route); route();
 </script>
 </body>
 </html>
