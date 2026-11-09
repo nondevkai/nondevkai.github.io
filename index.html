@@ -127,10 +127,10 @@ button{font:inherit}
 .spine::before,.spine::after{content:"";position:absolute;left:6px;right:6px;height:2px;background:#c9a35a;opacity:.85}
 .spine::before{top:8px;box-shadow:0 4px 0 #c9a35a}
 .spine::after{bottom:40px}
-.spine .ti{writing-mode:vertical-rl;font:700 15px/1.2 var(--serif);letter-spacing:.06em;margin-top:10px;max-height:150px;overflow:hidden}
+.spine .ti{writing-mode:vertical-lr;   /* 🅺 11-09 21:16 「우←좌는 세상에 없는 방법」 — 세로 줄을 왼쪽부터 읽게 */font:700 15px/1.2 var(--serif);letter-spacing:.06em;margin-top:10px;max-height:150px;overflow:hidden}
 .spine .no{font:700 12px var(--serif);color:#e2c487}
 .ghost{flex:none;width:46px;border:1px dashed var(--line);border-bottom:0;border-radius:3px 3px 0 0;display:flex;align-items:center;justify-content:center}
-.ghost span{writing-mode:vertical-rl;font:500 12px var(--serif);color:var(--faint);letter-spacing:.2em}
+.ghost span{writing-mode:vertical-lr;font:500 12px var(--serif);color:var(--faint);letter-spacing:.2em}
 
 /* 도서 카드 */
 .cat{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
